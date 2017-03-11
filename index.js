@@ -40,7 +40,7 @@ function executeStepAsync(step, context, validator) {
 			__log("Error making request: " + JSON.stringify(err));
 		})
 		.then(ret => {
-			__log(`Received ${ret.statusCode}: ${JSON.stringify(ret.body)}`);
+			__log(`Received ${ret.statusCode}`);
 			if (step.expect) assert.equal(ret.statusCode, step.expect, `Unexpected status code after call to ${fullUri}`);
 			if (step.validator) step.validator(ret);
 			if (step.export) {
