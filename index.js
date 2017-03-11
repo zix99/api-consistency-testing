@@ -36,7 +36,7 @@ function buildPayload(payloadTemplate, context) {
 function executeStepAsync(step, context) {
 	const payload = buildPayload(_.get(step, 'payload', {}), context);
 	__log(context);
-	const fullUri = config.baseUri + format(step.uri, context);
+	const fullUri = format(step.uri, context);
 
 	const requestObject = {
 		method: _.get(step, 'method', 'GET'),
@@ -46,10 +46,10 @@ function executeStepAsync(step, context) {
 
 	const lastSnapshot = {};
 
-	const middleware = config.requestMiddleware || ((req, next) => next(req));
+	const middleware = context.requestMiddleware || ((req, callback) => callback(null, req));
 
 	__log(`Making API request to ${step.method} ${fullUri}...`);
-	return middleware(requestObject, modifiedRequest => {
+	/*return middleware(requestObject, modifiedRequest => {
 		return request(modifiedRequest)
 			.then(ret => {
 				__log(`Received ${ret.statusCode}: ${JSON.stringify(ret.body)}`);
@@ -59,20 +59,38 @@ function executeStepAsync(step, context) {
 					context[step.export] = ret.body;
 				}
 				let snapshot = _.clone(lastSnapshot);
-				/*diff.observableDiff(snapshot, ret.body, change => {
+				diff.observableDiff(snapshot, ret.body, change => {
 					__log(change);
 					diff.applyChange(snapshot, ret.body, change);
-				});*/
+				});
 				return ret.body;
 			});
+		});*/
+
+	return promise.promisify(middleware)(requestObject)
+		.then(req => {
+			return request(req);
+		})
+		.then(ret => {
+			__log(`Received ${ret.statusCode}: ${JSON.stringify(ret.body)}`);
+			if (step.expect) assert.equal(ret.statusCode, step.expect, `Unexpected status code after call to ${fullUri}`);
+			if (step.validator) step.validator(ret);
+			if (step.export) {
+				context[step.export] = ret.body;
+			}
+			return ret.body;
+		})
+		.catch(err => {
+			__log("Error making request: " + JSON.stringify(err));
+			return {};
 		});
 }
 
 function executeAllStepsAync(steps, testValues, config) {
 	let context = _.clone(_.merge(config, testValues));
-	return promise.each(steps, step => {
+	return promise.map(steps, step => {
 		return executeStepAsync(step, context);
-	})
+	}, {concurrency: 1});
 }
 
 function buildMochaTests(apiSpec) {
@@ -95,14 +113,15 @@ function buildMochaTests(apiSpec) {
 }
 
 function runTestsInteractively(apiSpec) {
-	console.log("Running test: " + (apiSpec.description || "Undefined description"));
-	return _.forEach(apiSpec.tests, test => {
-		executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config)
+	console.dir(apiSpec);
+	console.log("Running test: " + (apiSpec.spec.description || "Undefined description"));
+	return promise.map(apiSpec.spec.tests, test => {
+		return executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config)
 			.then(ret => {
-				console.log("DONE!");
+				console.log("Done with test");
 				console.log(ret);
 			});
-	});
+	}, {concurrency: 1});
 }
 
 let __currentConfig = {};
@@ -124,7 +143,7 @@ function __act(name, data) {
 }
 
 function evaluateApis() {
-	promise.each(_.flatten(_.map(__tests, runTestsInteractively)));
+	return promise.map(__tests, runTestsInteractively, {concurrency: 1});
 }
 
 
