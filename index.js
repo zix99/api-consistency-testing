@@ -1,61 +1,15 @@
 const _ = require('lodash');
 const promise = require('bluebird');
-const request = promise.promisify(require('request'));
-const assert = require('chai').assert;
-const shortid = require('shortid').generate;
-const format = require('string-format');
-const diff = require('deep-diff');
+const runner = require('./runner')
 
 const DEFAULT_TIMEOUT = 4000;
 
 const MOCHA_MODE = typeof describe !== 'undefined';
-console.log("MOCHA: " + MOCHA_MODE);
+let __currentConfig = {};
+let __tests = [];
 
 function __log(msg) {
 	console.log(msg);
-}
-
-function buildPayload(payloadTemplate, context) {
-	return _.clone(payloadTemplate);
-}
-
-function executeStepAsync(step, context, validator) {
-	const payload = buildPayload(_.get(step, 'payload', {}), context);
-	const fullUri = format(step.uri, context);
-
-	const requestObject = {
-		method: _.get(step, 'method', 'GET'),
-		uri: fullUri,
-		json: buildPayload(step.payload, context),
-	};
-
-	const middleware = context.requestMiddleware || ((req, callback) => callback(null, req));
-
-	__log(`Making API request to ${step.method} ${fullUri}...`);
-	return promise.promisify(middleware)(requestObject)
-		.then(req => {
-			return request(req);
-		})
-		.catch(err => {
-			__log("Error making request: " + JSON.stringify(err));
-		})
-		.then(ret => {
-			__log(`Received ${ret.statusCode}`);
-			if (step.expect) assert.equal(ret.statusCode, step.expect, `Unexpected status code after call to ${fullUri}`);
-			if (step.validator) step.validator(ret);
-			if (step.export) {
-				context[step.export] = ret.body;
-			}
-			return validator ? validator(step, ret) : {};
-		});
-}
-
-function executeAllStepsAync(steps, testValues, config) {
-	__log("Executing steps with: " + JSON.stringify(testValues));
-	let context = _.clone(_.merge(config, testValues));
-	return promise.map(steps, step => {
-		return executeStepAsync(step, context);
-	}, {concurrency: 1});
 }
 
 function buildMochaTests(apiSpec) {
@@ -67,7 +21,7 @@ function buildMochaTests(apiSpec) {
 		_.forEach(apiSpec.tests, test => {
 			it("Test with values: " + JSON.stringify(test), function(done){
 				this.timeout(apiSpec.timeout || DEFAULT_TIMEOUT);
-				executeAllStepsAync(apiSpec.steps, test)
+				runner.executeAllStepsAync(apiSpec.steps, test)
 					.nodeify(done);
 			});
 		});
@@ -77,26 +31,18 @@ function buildMochaTests(apiSpec) {
 function runTestsInteractively(apiSpec) {	
 	__log("Running test: " + (apiSpec.spec.description || "Undefined description"));
 	return promise.map(apiSpec.spec.tests, test => {
-		return executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config);
+		return runner.executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config);
 	}, {concurrency: 1});
 }
-
-let __currentConfig = {};
-let __tests = [];
 
 /**
 * This is the entry-point for all tests
 */
 function describeConsistently(apiSpec) {
+	__tests.push({spec: apiSpec, config : __currentConfig});
 	if (MOCHA_MODE) {
 		buildMochaTests(apiSpec);
-	} else {
-		__tests.push({spec: apiSpec, config : __currentConfig});
 	}
-}
-
-function __act(name, data) {
-	return _.merge({'$act' : name, 'key' : shortid()}, data);
 }
 
 function evaluateApis() {
@@ -111,5 +57,6 @@ let wrapper = module.exports = function(opts, func) {
 };
 wrapper.describeConsistently = describeConsistently;
 wrapper.evaluateApis = evaluateApis;
+
 
 global.describeConsistently = describeConsistently;
