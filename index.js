@@ -15,27 +15,12 @@ function __log(msg) {
 	console.log(msg);
 }
 
-function discoverVariations(step, accumulator) {
-	accumulator = accumulator || [];
-
-	if (_.isPlainObject(step) && _.get(step, '$act') === 'any') {
-		accumulator.push(_.get(step, 'of', []));
-	} else if (_.isObject(step)) {
-		_.forEach(step, obj => {
-			discoverVariations(obj, accumulator);
-		});
-	}
-
-	return accumulator;
-}
-
 function buildPayload(payloadTemplate, context) {
 	return _.clone(payloadTemplate);
 }
 
-function executeStepAsync(step, context) {
+function executeStepAsync(step, context, validator) {
 	const payload = buildPayload(_.get(step, 'payload', {}), context);
-	__log(context);
 	const fullUri = format(step.uri, context);
 
 	const requestObject = {
@@ -43,33 +28,16 @@ function executeStepAsync(step, context) {
 		uri: fullUri,
 		json: buildPayload(step.payload, context),
 	};
-
-	const lastSnapshot = {};
-
+	
 	const middleware = context.requestMiddleware || ((req, callback) => callback(null, req));
 
 	__log(`Making API request to ${step.method} ${fullUri}...`);
-	/*return middleware(requestObject, modifiedRequest => {
-		return request(modifiedRequest)
-			.then(ret => {
-				__log(`Received ${ret.statusCode}: ${JSON.stringify(ret.body)}`);
-				if (step.expect) assert.equal(ret.statusCode, step.expect, `Unexpected status code after call to ${fullUri}`);
-				if (step.validator) step.validator(ret);
-				if (step.export) {
-					context[step.export] = ret.body;
-				}
-				let snapshot = _.clone(lastSnapshot);
-				diff.observableDiff(snapshot, ret.body, change => {
-					__log(change);
-					diff.applyChange(snapshot, ret.body, change);
-				});
-				return ret.body;
-			});
-		});*/
-
 	return promise.promisify(middleware)(requestObject)
 		.then(req => {
 			return request(req);
+		})
+		.catch(err => {
+			__log("Error making request: " + JSON.stringify(err));
 		})
 		.then(ret => {
 			__log(`Received ${ret.statusCode}: ${JSON.stringify(ret.body)}`);
@@ -78,11 +46,7 @@ function executeStepAsync(step, context) {
 			if (step.export) {
 				context[step.export] = ret.body;
 			}
-			return ret.body;
-		})
-		.catch(err => {
-			__log("Error making request: " + JSON.stringify(err));
-			return {};
+			return validator ? validator(step, ret) : {};
 		});
 }
 
@@ -99,9 +63,6 @@ function buildMochaTests(apiSpec) {
 	const tagStr = _.join(_.map(apiSpec.tags || [], tag => `@${tag}`), ', ');
 
 	describe(`${tagStr}: ${description}`, function(){
-		const cases = discoverVariations(apiSpec.steps);
-		__log(JSON.stringify(cases));
-
 		_.forEach(apiSpec.tests, test => {
 			it("Test with values: " + JSON.stringify(test), function(done){
 				this.timeout(apiSpec.timeout || DEFAULT_TIMEOUT);
