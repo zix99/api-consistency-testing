@@ -1,16 +1,15 @@
 const _ = require('lodash');
 const promise = require('bluebird');
 const runner = require('./runner')
+const log = require('winston');
+
+log.level = 'debug';
 
 const DEFAULT_TIMEOUT = 4000;
 
 const MOCHA_MODE = typeof describe !== 'undefined';
 let __currentConfig = {};
 let __tests = [];
-
-function __log(msg) {
-	console.log(msg);
-}
 
 function buildMochaTests(apiSpec) {
 	const description = apiSpec.description ||
@@ -29,7 +28,7 @@ function buildMochaTests(apiSpec) {
 }
 
 function runTestsInteractively(apiSpec) {	
-	__log("Running test: " + (apiSpec.spec.description || "Undefined description"));
+	log.info("Running test: " + (apiSpec.spec.description || "Undefined description"));
 	return promise.map(apiSpec.spec.tests, test => {
 		return runner.executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config);
 	}, {concurrency: 1});

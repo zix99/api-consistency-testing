@@ -1,2 +1,4 @@
 
-module.exports = require('./registry');
+module.exports = {
+	validate : require('./validator')
+};
