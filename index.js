@@ -2,6 +2,7 @@ const _ = require('lodash');
 const promise = require('bluebird');
 const runner = require('./runner')
 const log = require('winston');
+const validator = require('./expectations').validate;
 
 log.level = 'debug';
 
@@ -20,7 +21,7 @@ function buildMochaTests(apiSpec) {
 		_.forEach(apiSpec.tests, test => {
 			it("Test with values: " + JSON.stringify(test), function(done){
 				this.timeout(apiSpec.timeout || DEFAULT_TIMEOUT);
-				runner.executeAllStepsAync(apiSpec.steps, test)
+				runner.executeAllStepsAync(apiSpec.steps, test, apiSpec.config, validator)
 					.nodeify(done);
 			});
 		});
@@ -30,7 +31,7 @@ function buildMochaTests(apiSpec) {
 function runTestsInteractively(apiSpec) {	
 	log.info("Running test: " + (apiSpec.spec.description || "Undefined description"));
 	return promise.map(apiSpec.spec.tests, test => {
-		return runner.executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config);
+		return runner.executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config, validator);
 	}, {concurrency: 1});
 }
 

@@ -1,4 +1,5 @@
 var fs = require('fs');
+var _ = require('lodash');
 
 let snapshotCache = {};
 
@@ -10,7 +11,7 @@ function loadSnapshotFile(name) {
 	const filename = "./snapshots/" + getKeyName(name);
 
 	if (!fs.existsSync(filename)) {
-		return [];
+		return null;
 	}
 
 	return JSON.parse(fs.readFileSync(filename));
@@ -27,5 +28,5 @@ function loadSnapshot(name) {
 }
 
 module.exports = {
-
+	loadSnapshot
 };
