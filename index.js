@@ -28,7 +28,7 @@ function executeStepAsync(step, context, validator) {
 		uri: fullUri,
 		json: buildPayload(step.payload, context),
 	};
-	
+
 	const middleware = context.requestMiddleware || ((req, callback) => callback(null, req));
 
 	__log(`Making API request to ${step.method} ${fullUri}...`);
@@ -51,6 +51,7 @@ function executeStepAsync(step, context, validator) {
 }
 
 function executeAllStepsAync(steps, testValues, config) {
+	__log("Executing steps with: " + JSON.stringify(testValues));
 	let context = _.clone(_.merge(config, testValues));
 	return promise.map(steps, step => {
 		return executeStepAsync(step, context);
@@ -73,15 +74,10 @@ function buildMochaTests(apiSpec) {
 	});
 }
 
-function runTestsInteractively(apiSpec) {
-	console.dir(apiSpec);
-	console.log("Running test: " + (apiSpec.spec.description || "Undefined description"));
+function runTestsInteractively(apiSpec) {	
+	__log("Running test: " + (apiSpec.spec.description || "Undefined description"));
 	return promise.map(apiSpec.spec.tests, test => {
-		return executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config)
-			.then(ret => {
-				console.log("Done with test");
-				console.log(ret);
-			});
+		return executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config);
 	}, {concurrency: 1});
 }
 
