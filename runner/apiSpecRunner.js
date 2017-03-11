@@ -37,7 +37,7 @@ function executeStepAsync(step, context, validator) {
 			if (step.export) {
 				context[step.export] = ret.body;
 			}
-			return validator ? validator({step, context}, ret) : {};
+			return validator ? validator({step}, _.pick(ret, ['statusCode', 'body'])) : {};
 		});
 }
 
