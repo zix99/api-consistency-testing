@@ -8,7 +8,7 @@ contract, and setting up the tests is simply a matter of answering yes-or-no que
 ## API Spec
 
 
-```json
+```js
 {
 	description : 'Test creating a new pet',
 	tags : ['create', 'pet'],
