@@ -33,7 +33,8 @@ function loadSnapshotFile(name) {
 		return null;
 	}
 
-	return _.last(eval(fs.readFileSync(filename, {encoding: 'utf-8'})));
+	let snapshot = eval(fs.readFileSync(filename, {encoding: 'utf-8'}));
+	return _.last(snapshot);
 }
 
 function loadSnapshot(name) {
@@ -47,7 +48,7 @@ function loadSnapshot(name) {
 	return (snapshotCache[key] = loadSnapshotFile(name));
 }
 
-function ensureSnapshotExists(filename) {
+function _ensureSnapshotExists(filename) {
 	if (!fs.existsSync(filename)) {
 		log.debug(`Creating new snapshot file ${filename}...`);
 		if (!fs.existsSync(SNAPSHOT_DIR)) {
@@ -60,9 +61,9 @@ function ensureSnapshotExists(filename) {
 function appendSnapshot(name, data) {
 	log.debug(`Appending to snapshot ${name}...`);
 	const filename = getFilename(name);
-	ensureSnapshotExists(filename);
+	_ensureSnapshotExists(filename);
 
-	const code = `snapshot.push(${JSON.stringify(data)});\n\n`;
+	const code = `\nsnapshot.push(${JSON.stringify(data)});snapshot;\n\n`;
 	fs.appendFileSync(filename, code);
 }
 
