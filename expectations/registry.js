@@ -8,7 +8,7 @@ const SNAPSHOT_DIR = 'snapshots';
 const SNAPSHOT_HEADER = `//VERSION=0.1
 const _ = require('lodash');
 
-let snapshot = module.exports = [];
+this.snapshot = [];
 
 `;
 
@@ -25,6 +25,11 @@ function getFilename(name) {
 	return `./${SNAPSHOT_DIR}/` + getKeyName(name) + '.snapshot.js';
 }
 
+function evaluateSnapshot(code) {
+	eval(code);
+	return this.snapshot;
+}
+
 function loadSnapshotFile(name) {
 	const filename = getFilename(name);
 	log.debug(`Loading snapshot from file ${filename}...`);
@@ -33,7 +38,7 @@ function loadSnapshotFile(name) {
 		return null;
 	}
 
-	let snapshot = eval(fs.readFileSync(filename, {encoding: 'utf-8'}));
+	let snapshot = evaluateSnapshot(fs.readFileSync(filename, {encoding: 'utf-8'}));
 	return _.last(snapshot);
 }
 
@@ -63,7 +68,11 @@ function appendSnapshot(name, data) {
 	const filename = getFilename(name);
 	_ensureSnapshotExists(filename);
 
-	const code = `\nsnapshot.push(${JSON.stringify(data)});snapshot;\n\n`;
+	const code =`
+// Snapshot taken on ${new Date()}
+this.snapshot.push(${JSON.stringify(data)});
+`;
+
 	fs.appendFileSync(filename, code);
 }
 

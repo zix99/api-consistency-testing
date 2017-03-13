@@ -3,6 +3,7 @@ const promise = require('bluebird');
 const hash = require('object-hash');
 const log = require('winston');
 const prompt = require('inquirer').prompt;
+const deep = require('../util/deep');
 
 const registry = require('./registry');
 
@@ -35,35 +36,26 @@ function checkEquality(schemaVal, responseVal) {
 	return schemaVal === responseVal;
 }
 
-function compareToSchema(schema, response, root) {
-	root = root || '.';
+function compareToSchema(schema, response, onDifference) {
+	onDifference = onDifference || promise.resolve();
 
-	const keys = _.union(_.keys(schema), _.keys(response));
-	let changeOccurred = false;
+	let collapsedSchema = deep.collapse(schema);
+	let collapsedResponse = deep.collapse(response);
+
+	let keys = _.union(_.keys(collapsedSchema), _.keys(collapsedResponse));
 
 	return promise.map(keys, key => {
-		if (_.isPlainObject(_.get(response, key))) {
-			// Recurse!
-			if (!_.isPlainObject(_.get(schema, key)))
-			{
-				schema[key] = {}
-			}
-			return compareToSchema(schema[key], response[key], `${root}.${key}`);
-		} else {
-			const schemaVal = _.get(schema, key);
-			const responseVal = _.get(response, key);
-			if (!checkEquality(schemaVal, responseVal)) {
-				return promptValueCompare(`${root}:${key}`, schemaVal, responseVal)
-					.then(answer => {
-						if (answer) {
-							schema[key] = answer;
-							changeOccurred = true;
-						}
-					});
-			}
+		if (!_.has(collapsedSchema, key) || !_.has(collapsedResponse, key) || !checkEquality(_.get(collapsedSchema, key), _.get(collapsedResponse, key))) {
+			return onDifference(key, _.get(collapsedSchema, key), _.get(collapsedResponse, key))
+				.then(answer => {
+					if (answer !== undefined) {
+						collapsedSchema[key] = answer;
+					}
+				});
 		}
-	}, {concurrency: 1})
-		.then(() => changeOccurred);
+	}, {concurrency: 1}).then(() => {
+		return deep.expand(collapsedSchema);
+	});
 }
 
 function validateResponse(scenario, response) {
@@ -75,14 +67,11 @@ function validateResponse(scenario, response) {
 	log.debug('Current snapshot: ' + JSON.stringify(schema));
 	log.debug('Response: ' + JSON.stringify(response));
 
-	return compareToSchema(schema, response).then(() => {
-		console.dir(schema);
-		return schema;
-	})
-	.then(ret => {
-		if (ret)
-			registry.appendSnapshot(scenarioHash, schema);
-	});
+	return compareToSchema(schema, response, promptValueCompare)
+		.then(ret => {
+			if (ret)
+				registry.appendSnapshot(scenarioHash, ret);
+		});
 }
 
 module.exports = validateResponse;
