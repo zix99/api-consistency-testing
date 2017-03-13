@@ -9,6 +9,7 @@
   "author": "Chris LaPointe",
   "license": "MIT",
   "dependencies": {
+    "blessed": "^0.1.81",
     "bluebird": "^3.5.0",
     "chai": "^3.5.0",
     "inquirer": "^3.0.6",

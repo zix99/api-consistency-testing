@@ -7,14 +7,14 @@ const deep = require('../util/deep');
 
 const registry = require('./registry');
 
-function promptValueCompare(key, schemaVal, responseVal) {
+function promptValueCompare(args) {
 	const q = {
 		name : 'prompt',
-		message : `Mismatch on ${key}.\n  Currently: ${schemaVal}\n  Now: ${responseVal}\nDo you want to update?`,
+		message : `Mismatch on ${args.key}.\n  Currently: ${args.expect}\n  Now: ${args.actual}\nDo you want to update?`,
 		type: 'expand',
 		choices: [
-			{key: 'k', value: schemaVal, name: 'Keep current'},
-			{key: 'r', value: responseVal, name: 'Replace'},
+			{key: 'k', value: args.expect, name: 'Keep current'},
+			{key: 'r', value: args.actual, name: 'Replace'},
 			{key: 'i', value: undefined, name: 'Ignore'},
 			{key: 'v', value: function(val){return !_.isNaN(parseInt(val));}, name: 'Numeric Value'}
 		]
@@ -42,7 +42,14 @@ function compareToSchema(schema, response, onDifference) {
 
 	return promise.map(keys, key => {
 		if (!_.has(collapsedSchema, key) || !_.has(collapsedResponse, key) || !checkEquality(_.get(collapsedSchema, key), _.get(collapsedResponse, key))) {
-			return onDifference(key, _.get(collapsedSchema, key), _.get(collapsedResponse, key))
+			let args = {
+				key,
+				expect: _.get(collapsedSchema, key),
+				actual: _.get(collapsedResponse, key),
+				fullExpect: schema,
+				fullActual: response
+			};
+			return onDifference(args)
 				.then(answer => {
 					if (typeof answer === 'function') {
 						collapsedSchema[key] = answer.toString();
