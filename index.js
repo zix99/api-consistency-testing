@@ -4,8 +4,6 @@ const runner = require('./runner')
 const log = require('winston');
 const validator = require('./expectations').validate;
 
-log.level = 'debug';
-
 const DEFAULT_TIMEOUT = 4000;
 
 const MOCHA_MODE = typeof describe !== 'undefined';

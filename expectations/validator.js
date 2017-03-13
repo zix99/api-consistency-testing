@@ -8,31 +8,27 @@ const deep = require('../util/deep');
 const registry = require('./registry');
 
 function promptValueCompare(key, schemaVal, responseVal) {
-	// Mismatch!
 	const q = {
 		name : 'prompt',
 		message : `Mismatch on ${key}.\n  Currently: ${schemaVal}\n  Now: ${responseVal}\nDo you want to update?`,
 		type: 'expand',
 		choices: [
-			{key: 'k', value: 'k', name: 'Keep current'},
-			{key: 'r', value: 'r', name: 'Replace'},
-			{key: 'i', value: 'i', name: 'Ignore'},
+			{key: 'k', value: schemaVal, name: 'Keep current'},
+			{key: 'r', value: responseVal, name: 'Replace'},
+			{key: 'i', value: undefined, name: 'Ignore'},
+			{key: 'v', value: function(val){return !_.isNaN(parseInt(val));}, name: 'Numeric Value'}
 		]
 	};
 	return prompt([q])
 		.then(answer => {
-			const ans = answer['prompt'];
-			if (ans === 'r') {
-				return responseVal;
-			} else if (ans === 'k') {
-				return schemaVal;
-			} else if (ans === 'i') {
-				return undefined;
-			}
+			return answer['prompt'];
 		});
 }
 
 function checkEquality(schemaVal, responseVal) {
+	if (_.startsWith(schemaVal, 'function')) {
+		return eval(`(${schemaVal})`)(responseVal);
+	}
 	return schemaVal === responseVal;
 }
 
@@ -48,7 +44,9 @@ function compareToSchema(schema, response, onDifference) {
 		if (!_.has(collapsedSchema, key) || !_.has(collapsedResponse, key) || !checkEquality(_.get(collapsedSchema, key), _.get(collapsedResponse, key))) {
 			return onDifference(key, _.get(collapsedSchema, key), _.get(collapsedResponse, key))
 				.then(answer => {
-					if (answer !== undefined) {
+					if (typeof answer === 'function') {
+						collapsedSchema[key] = answer.toString();
+					} else if (answer !== undefined) {
 						collapsedSchema[key] = answer;
 					}
 				});
