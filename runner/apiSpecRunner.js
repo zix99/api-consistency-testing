@@ -4,9 +4,16 @@ const request = promise.promisify(require('request'));
 const assert = require('chai').assert;
 const format = require('string-format');
 const log = require('winston');
+const deep = require('../util/deep');
 
 function buildPayload(payloadTemplate, context) {
-	return _.clone(payloadTemplate);
+	let clone = _.clone(payloadTemplate);
+	return deep.map(clone, val => {
+		if (_.isString(val)) {
+			return format(val, context);
+		}
+		return val;
+	});
 }
 
 

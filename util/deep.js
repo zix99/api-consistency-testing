@@ -28,7 +28,23 @@ function expand(obj) {
 	return expanded.root;
 }
 
+/*
+Object
+func(val)
+*/
+function map(obj, func) {
+	_.forEach(obj, (val, key) => {
+		if (_.isPlainObject(val) || _.isArray(val)) {
+			map(val, func);
+		} else {
+			_.set(obj, key, func(val));
+		}
+	});
+	return obj;
+}
+
 module.exports = {
 	collapse,
-	expand
+	expand,
+	map,
 };
