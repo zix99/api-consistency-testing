@@ -44,7 +44,7 @@ function executeStepAsync(step, context, validator) {
 			if (step.export) {
 				context[step.export] = ret.body;
 			}
-			return validator ? validator({step}, _.pick(ret, ['statusCode', 'body'])) : {};
+			return validator(_.pick(ret, ['statusCode', 'body']));
 		});
 }
 
@@ -52,11 +52,12 @@ function executeAllStepsAync(steps, testValues, config, validator) {
 	log.info("Executing steps with: " + JSON.stringify(testValues));
 	let context = _.clone(_.merge(config, testValues));
 	return promise.map(steps, step => {
-		return executeStepAsync(step, context, validator);
+		return executeStepAsync(step, context, (response) => {
+			return validator ? validator({step, test: testValues}, response) : {};
+		});
 	}, {concurrency: 1});
 }
 
 module.exports = {
 	executeAllStepsAync,
-	executeStepAsync
 };

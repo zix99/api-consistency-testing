@@ -4,10 +4,13 @@ var log = require('winston');
 
 let snapshotCache = {};
 
+const CURRENT_VERSION = 1;
+
 const SNAPSHOT_DIR = 'snapshots';
 const SNAPSHOT_HEADER = `//VERSION=0.1
 const _ = require('lodash');
 
+this.version = ${CURRENT_VERSION};
 this.snapshot = [];
 
 `;
@@ -22,6 +25,8 @@ function __getFilename(name) {
 
 function __evaluateSnapshot(code) {
 	eval(code);
+	if (this.version !== CURRENT_VERSION)
+		return undefined;
 	return this.snapshot;
 }
 
@@ -34,6 +39,8 @@ function __loadSnapshotFile(name) {
 	}
 
 	let snapshot = __evaluateSnapshot(fs.readFileSync(filename, {encoding: 'utf-8'}));
+	if (!snapshot) return null;
+	
 	return _.last(snapshot);
 }
 

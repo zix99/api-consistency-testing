@@ -3,7 +3,7 @@ const promise = require('bluebird');
 const hash = require('object-hash');
 const log = require('winston');
 const deep = require('../util/deep');
-const questionui = require('./questionui').askQuestion;
+const questionui = require('./ui/blessed-cli').askQuestion;
 
 const registry = require('./registry');
 
