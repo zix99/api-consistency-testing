@@ -29,7 +29,7 @@ function compareToSchema(schema, response, onDifference) {
 				expect: _.get(collapsedSchema, key),
 				actual: _.get(collapsedResponse, key),
 				fullExpect: deep.expand(collapsedSchema),
-				fullActual: response
+				fullActual: response,
 			};
 			return onDifference(args)
 				.then(answer => {

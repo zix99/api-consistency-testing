@@ -21,7 +21,7 @@ function askQuestion(args) {
 
 		let topContainer = blessed.box({
 			parent: screen,
-			top: 0,
+			top: 1,
 			left: 0,
 			width: '100%',
 			height: `100%-${LOWER_HEIGHT}`
@@ -40,6 +40,7 @@ function askQuestion(args) {
 				fg: 'blue'
 			},
 			scrollable: true,
+			alwaysScroll: true,
 		});
 
 		let actualBox = blessed.box({
@@ -55,6 +56,7 @@ function askQuestion(args) {
 				fg: 'green'
 			},
 			scrollable: true,
+			alwaysScroll: true,
 		});
 
 		/* ====== LOWER FORM ====== */
@@ -139,6 +141,14 @@ function askQuestion(args) {
 		});
 		screen.key(['right'], () => screen.focusNext());
 		screen.key(['left'], () => screen.focusPrevious());
+		screen.key(['j'], () => {
+			expectBox.scroll(1);
+			actualBox.scroll(1);
+		});
+		screen.key(['k'], () => {
+			expectBox.scroll(-1);
+			actualBox.scroll(-1);
+		});
 
 		screen.render();
 	});
