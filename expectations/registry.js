@@ -70,7 +70,7 @@ function appendSnapshot(name, data) {
 
 	const code =`
 // Snapshot taken on ${new Date()}
-this.snapshot.push(${JSON.stringify(data)});
+this.snapshot.push(${JSON.stringify(data, null, '\t')});
 `;
 
 	fs.appendFileSync(filename, code);

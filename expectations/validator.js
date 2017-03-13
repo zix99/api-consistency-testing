@@ -37,7 +37,7 @@ function checkEquality(schemaVal, responseVal) {
 }
 
 function compareToSchema(schema, response, onDifference) {
-	onDifference = onDifference || promise.resolve();
+	onDifference = onDifference || (() => promise.resolve());
 
 	let collapsedSchema = deep.collapse(schema);
 	let collapsedResponse = deep.collapse(response);
@@ -59,7 +59,6 @@ function compareToSchema(schema, response, onDifference) {
 }
 
 function validateResponse(scenario, response) {
-	console.dir(scenario);
 	const scenarioHash = hash(scenario);
 	log.debug(`Scenario hash: ${scenarioHash}`);
 
