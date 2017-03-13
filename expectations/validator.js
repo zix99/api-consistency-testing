@@ -53,8 +53,10 @@ function validateResponse(scenario, response) {
 	log.debug('Current snapshot: ' + JSON.stringify(schema));
 	log.debug('Response: ' + JSON.stringify(response));
 
-	return compareToSchema(schema, response, questionui)
-		.then(ret => {
+	return compareToSchema(schema, response, args => {
+		args['scenario'] = scenario;
+		return questionui(args);
+	}).then(ret => {
 			if (ret)
 				registry.appendSnapshot(scenarioHash, ret);
 		});

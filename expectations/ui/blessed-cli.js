@@ -4,7 +4,7 @@ const blessed = require('blessed');
 
 /**
 args : {
-	key, expect, actual, fullExpect, fullActual
+	key, expect, actual, fullExpect, fullActual, scenario
 }
 returns: promise
 */
@@ -15,13 +15,24 @@ function askQuestion(args) {
 		});
 		screen.title = `ACT: Response Comparison`;
 
+		/* ====== Context Top ===== */
+		let testText = _.join(_.map(args.scenario.test, (val, key) => `${key}=${val}`), ', ');
+		let requestDetails = blessed.box({
+			parent: screen,
+			top: 0, left: 0,
+			width: '100%',
+			height: 2,
+			tags: true,
+			content: `{red-fg}${args.scenario.step.method}{/red-fg} {blue-fg}${args.scenario.step.uri}{/blue-fg} ${args.scenario.step.description}\n  Scenario: {cyan-fg}${testText}{/cyan-fg}`,
+		});
+
 		/* ====== TOP AREA ====== */
 
 		const LOWER_HEIGHT = 7;
 
 		let topContainer = blessed.box({
 			parent: screen,
-			top: 1,
+			top: 2,
 			left: 0,
 			width: '100%',
 			height: `100%-${LOWER_HEIGHT}`
