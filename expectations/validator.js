@@ -2,28 +2,10 @@ const _ = require('lodash');
 const promise = require('bluebird');
 const hash = require('object-hash');
 const log = require('winston');
-const prompt = require('inquirer').prompt;
 const deep = require('../util/deep');
+const questionui = require('./questionui').askQuestion;
 
 const registry = require('./registry');
-
-function promptValueCompare(args) {
-	const q = {
-		name : 'prompt',
-		message : `Mismatch on ${args.key}.\n  Currently: ${args.expect}\n  Now: ${args.actual}\nDo you want to update?`,
-		type: 'expand',
-		choices: [
-			{key: 'k', value: args.expect, name: 'Keep current'},
-			{key: 'r', value: args.actual, name: 'Replace'},
-			{key: 'i', value: undefined, name: 'Ignore'},
-			{key: 'v', value: function(val){return !_.isNaN(parseInt(val));}, name: 'Numeric Value'}
-		]
-	};
-	return prompt([q])
-		.then(answer => {
-			return answer['prompt'];
-		});
-}
 
 function checkEquality(schemaVal, responseVal) {
 	if (_.startsWith(schemaVal, 'function')) {
@@ -46,7 +28,7 @@ function compareToSchema(schema, response, onDifference) {
 				key,
 				expect: _.get(collapsedSchema, key),
 				actual: _.get(collapsedResponse, key),
-				fullExpect: schema,
+				fullExpect: deep.expand(collapsedSchema),
 				fullActual: response
 			};
 			return onDifference(args)
@@ -71,7 +53,7 @@ function validateResponse(scenario, response) {
 	log.debug('Current snapshot: ' + JSON.stringify(schema));
 	log.debug('Response: ' + JSON.stringify(response));
 
-	return compareToSchema(schema, response, promptValueCompare)
+	return compareToSchema(schema, response, questionui)
 		.then(ret => {
 			if (ret)
 				registry.appendSnapshot(scenarioHash, ret);

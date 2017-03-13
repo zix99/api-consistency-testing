@@ -17,7 +17,7 @@ function executeStepAsync(step, context, validator) {
 	const requestObject = {
 		method: _.get(step, 'method', 'GET'),
 		uri: fullUri,
-		json: buildPayload(step.payload, context),
+		json: step.payload ? buildPayload(step.payload, context) : true,
 	};
 
 	const middleware = context.requestMiddleware || ((req, callback) => callback(null, req));
