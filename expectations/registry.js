@@ -12,48 +12,43 @@ this.snapshot = [];
 
 `;
 
-function __evalScoped(code) {
-	return eval(code);
-}
-
-
-function getKeyName(name) {
+function __getKeyName(name) {
 	return name; //TODO: Some replace regex to clean up the file names
 }
 
-function getFilename(name) {
-	return `./${SNAPSHOT_DIR}/` + getKeyName(name) + '.snapshot.js';
+function __getFilename(name) {
+	return `./${SNAPSHOT_DIR}/` + __getKeyName(name) + '.snapshot.js';
 }
 
-function evaluateSnapshot(code) {
+function __evaluateSnapshot(code) {
 	eval(code);
 	return this.snapshot;
 }
 
-function loadSnapshotFile(name) {
-	const filename = getFilename(name);
+function __loadSnapshotFile(name) {
+	const filename = __getFilename(name);
 	log.debug(`Loading snapshot from file ${filename}...`);
 
 	if (!fs.existsSync(filename)) {
 		return null;
 	}
 
-	let snapshot = evaluateSnapshot(fs.readFileSync(filename, {encoding: 'utf-8'}));
+	let snapshot = __evaluateSnapshot(fs.readFileSync(filename, {encoding: 'utf-8'}));
 	return _.last(snapshot);
 }
 
 function loadSnapshot(name) {
 	log.debug(`Loading snapshot for ${name}`);
-	const key = getKeyName(name);
+	const key = __getKeyName(name);
 
 	if (_.has(snapshotCache, key)) {
 		return _.get(snapshotCache, key);
 	}
 
-	return (snapshotCache[key] = loadSnapshotFile(name));
+	return (snapshotCache[key] = __loadSnapshotFile(name));
 }
 
-function _ensureSnapshotExists(filename) {
+function __ensureSnapshotExists(filename) {
 	if (!fs.existsSync(filename)) {
 		log.debug(`Creating new snapshot file ${filename}...`);
 		if (!fs.existsSync(SNAPSHOT_DIR)) {
@@ -65,8 +60,8 @@ function _ensureSnapshotExists(filename) {
 
 function appendSnapshot(name, data) {
 	log.debug(`Appending to snapshot ${name}...`);
-	const filename = getFilename(name);
-	_ensureSnapshotExists(filename);
+	const filename = __getFilename(name);
+	__ensureSnapshotExists(filename);
 
 	const code =`
 // Snapshot taken on ${new Date()}
