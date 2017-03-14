@@ -4,12 +4,17 @@ const hash = require('object-hash');
 const log = require('winston');
 const deep = require('../util/deep');
 const questionui = require('./ui/blessed-cli').askQuestion;
+const matchers = require('./matchers');
 
 const registry = require('./registry');
 
 function checkEquality(schemaVal, responseVal) {
-	if (_.startsWith(schemaVal, 'function')) {
-		return eval(`(${schemaVal})`)(responseVal);
+	const MATCHER_PREFIX = '$matcher:';
+	if (_.startsWith(schemaVal, '$matcher:')) {
+		const matcherName = schemaVal.substring(MATCHER_PREFIX.length);
+		if (_.has(matchers, matcherName)) {
+			return matchers[matcherName];
+		}
 	}
 	return schemaVal === responseVal;
 }
@@ -33,9 +38,7 @@ function compareToSchema(schema, response, onDifference) {
 			};
 			return onDifference(args)
 				.then(answer => {
-					if (typeof answer === 'function') {
-						collapsedSchema[key] = answer.toString();
-					} else if (answer !== undefined) {
+					if (answer !== undefined) {
 						collapsedSchema[key] = answer;
 					}
 				});

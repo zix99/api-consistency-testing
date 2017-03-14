@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const promise = require('bluebird');
 const blessed = require('blessed');
+const matchers = require('../matchers');
 
 /**
 args : {
@@ -24,6 +25,9 @@ function askQuestion(args) {
 			height: 2,
 			tags: true,
 			content: `{red-fg}${args.scenario.step.method}{/red-fg} {blue-fg}${args.scenario.step.uri}{/blue-fg} ${args.scenario.step.description}\n  Scenario: {cyan-fg}${testText}{/cyan-fg}`,
+			style : {
+				bg: 'gray'
+			}
 		});
 
 		/* ====== TOP AREA ====== */
@@ -139,6 +143,12 @@ function askQuestion(args) {
 
 		createButton('Keep', args.expect).focus();
 		createButton('Replace', args.actual);
+
+		_.forEach(matchers, (matcher, name) => {
+			if (matcher(args.actual)) {
+				createButton(name, '$matcher:' + name);
+			}
+		});
 		
 
 		/* ====== HOOKS ====== */
