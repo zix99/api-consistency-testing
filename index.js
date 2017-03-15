@@ -3,6 +3,7 @@ const promise = require('bluebird');
 const runner = require('./runner')
 const log = require('winston');
 const validator = require('./expectations').validate;
+const getAllCombinations = require('./util/combiner').getAllCombinations;
 
 const DEFAULT_TIMEOUT = 4000;
 
@@ -10,13 +11,20 @@ const MOCHA_MODE = typeof describe !== 'undefined';
 let __currentConfig = {};
 let __tests = [];
 
+
+function buildTestVariations(testSet) {
+	return _.reduce(testSet, (accum, test) => {
+		return _.union(accum, getAllCombinations(test));
+	}, []);
+}
+
 function buildMochaTests(apiSpec) {
 	const description = apiSpec.description ||
 		_.join(_.map(apiSpec.steps, step => `${step.method} ${step.uri}`), ' -> ');
 	const tagStr = _.join(_.map(apiSpec.tags || [], tag => `@${tag}`), ', ');
 
 	describe(`${tagStr}: ${description}`, function(){
-		_.forEach(apiSpec.tests, test => {
+		_.forEach(buildTestVariations(apiSpec.tests), test => {
 			it("Test with values: " + JSON.stringify(test), function(done){
 				this.timeout(apiSpec.timeout || DEFAULT_TIMEOUT);
 				runner.executeAllStepsAync(apiSpec.steps, test, apiSpec.config, validator)
@@ -28,8 +36,13 @@ function buildMochaTests(apiSpec) {
 
 function runTestsInteractively(apiSpec) {	
 	log.info("Running test: " + (apiSpec.spec.description || "Undefined description"));
-	return promise.map(apiSpec.spec.tests, test => {
-		return runner.executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config, validator);
+	const variations = buildTestVariations(apiSpec.spec.tests);
+	console.dir(variations);
+	return promise.map(variations, test => {
+		return runner.executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config, validator)
+			.catch(err => {
+				log.warn(`Error processing ${apiSpec.spec.description}: ${err}`);
+			});
 	}, {concurrency: 1});
 }
 
