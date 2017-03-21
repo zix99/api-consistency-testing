@@ -56,9 +56,7 @@ function describeConsistently(apiSpec) {
 function evaluateApis() {
   return promise.map(__tests, runTestsInteractively, { concurrency: 1 });
 }
-
-/* eslint no-multi-assign: "off" */
-const wrapper = module.exports = (opts, func) => {
+const wrapper = (opts, func) => {
   __currentConfig = opts;
   func();
   __currentConfig = {};
@@ -66,5 +64,5 @@ const wrapper = module.exports = (opts, func) => {
 wrapper.describeConsistently = describeConsistently;
 wrapper.evaluateApis = evaluateApis;
 
-
+module.exports = wrapper;
 global.describeConsistently = describeConsistently;
