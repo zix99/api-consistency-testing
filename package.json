@@ -4,7 +4,8 @@
   "description": "Testing framework that tracks consistency of web APIs over time",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --recursive ./test"
+    "test": "mocha --recursive ./test",
+    "lint" : "eslint ."
   },
   "author": "Chris LaPointe",
   "license": "MIT",
