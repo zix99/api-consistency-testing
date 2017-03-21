@@ -18,15 +18,15 @@ function buildTestVariations(testSet) {
 
 function buildMochaTests(apiSpec) {
   const description = apiSpec.description ||
-		_.join(_.map(apiSpec.steps, step => `${step.method} ${step.uri}`), ' -> ');
+  _.join(_.map(apiSpec.steps, step => `${step.method} ${step.uri}`), ' -> ');
   const tagStr = _.join(_.map(apiSpec.tags || [], tag => `@${tag}`), ', ');
 
   describe(`${tagStr}: ${description}`, () => {
     _.forEach(buildTestVariations(apiSpec.tests), (test) => {
-      it(`Test with values: ${JSON.stringify(test)}`, function (done) {
+      it(`Test with values: ${JSON.stringify(test)}`, done => {
         this.timeout(apiSpec.timeout || DEFAULT_TIMEOUT);
         runner.executeAllStepsAync(apiSpec.steps, test, apiSpec.config, validator)
-					.nodeify(done);
+          .nodeify(done);
       });
     });
   });
@@ -36,10 +36,11 @@ function runTestsInteractively(apiSpec) {
   log.info(`Running test: ${apiSpec.spec.description || 'Undefined description'}`);
   const variations = buildTestVariations(apiSpec.spec.tests);
   console.dir(variations);
-  return promise.map(variations, test => runner.executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config, validator)
-			.catch((err) => {
-  log.warn(`Error processing ${apiSpec.spec.description}: ${err}`);
-}), { concurrency: 1 });
+  return promise.map(variations, test =>
+    runner.executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config, validator)
+      .catch((err) => {
+        log.warn(`Error processing ${apiSpec.spec.description}: ${err}`);
+      }), { concurrency: 1 });
 }
 
 /**
@@ -56,8 +57,8 @@ function evaluateApis() {
   return promise.map(__tests, runTestsInteractively, { concurrency: 1 });
 }
 
-
-const wrapper = module.exports = function (opts, func) {
+/* eslint no-multi-assign: "off" */
+const wrapper = module.exports = (opts, func) => {
   __currentConfig = opts;
   func();
   __currentConfig = {};

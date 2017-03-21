@@ -13,7 +13,7 @@ describe('Deep utilities', () => {
     },
     f: [
       'g',
-			{ h: 'i' },
+      { h: 'i' },
     ],
   };
 
@@ -35,7 +35,7 @@ describe('Deep utilities', () => {
     },
     f: [
       'g',
-			{ h: 'i' },
+      { h: 'i' },
     ],
   };
 

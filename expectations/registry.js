@@ -23,6 +23,7 @@ function __getFilename(name) {
   return `./${SNAPSHOT_DIR}/${__getKeyName(name)}.snapshot.js`;
 }
 
+/* eslint no-eval: "off" */
 function __evaluateSnapshot(code) {
   eval(code);
   if (this.version !== CURRENT_VERSION) { return undefined; }

@@ -19,6 +19,7 @@ function checkEquality(schemaVal, responseVal) {
   return schemaVal === responseVal;
 }
 
+/* eslint no-param-reassign: "off" */
 function compareToSchema(schema, response, onDifference) {
   onDifference = onDifference || (() => promise.resolve());
 
@@ -37,12 +38,13 @@ function compareToSchema(schema, response, onDifference) {
         fullActual: response,
       };
       return onDifference(args)
-				.then((answer) => {
-  if (answer !== undefined) {
-    collapsedSchema[key] = answer;
-  }
-});
+        .then((answer) => {
+          if (answer !== undefined) {
+            collapsedSchema[key] = answer;
+          }
+        });
     }
+    return undefined;
   }, { concurrency: 1 }).then(() => deep.expand(collapsedSchema));
 }
 

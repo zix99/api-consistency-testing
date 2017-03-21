@@ -1,22 +1,23 @@
 const _ = require('lodash');
-const promise = require('bluebird');
+const Promise = require('bluebird');
 const blessed = require('blessed');
 const matchers = require('../matchers');
 
 /**
 args : {
-	key, expect, actual, fullExpect, fullActual, scenario
+  key, expect, actual, fullExpect, fullActual, scenario
 }
 returns: promise
 */
+/* eslint no-unused-vars: "off" */
 function askQuestion(args) {
-  return new promise((resolve) => {
+  return new Promise((resolve) => {
     const screen = blessed.screen({
       smartCSR: true,
     });
     screen.title = 'ACT: Response Comparison';
 
-		/* ====== Context Top ===== */
+    /* ====== Context Top ===== */
     const testText = _.join(_.map(args.scenario.test, (val, key) => `${key}=${val}`), ', ');
     const requestDetails = blessed.box({
       parent: screen,
@@ -31,7 +32,7 @@ function askQuestion(args) {
       },
     });
 
-		/* ====== TOP AREA ====== */
+    /* ====== TOP AREA ====== */
 
     const LOWER_HEIGHT = 7;
 
@@ -75,7 +76,7 @@ function askQuestion(args) {
       alwaysScroll: true,
     });
 
-		/* ====== LOWER FORM ====== */
+    /* ====== LOWER FORM ====== */
 
     const lowerForm = blessed.form({
       parent: screen,
@@ -106,7 +107,7 @@ function askQuestion(args) {
     });
 
     let offX = 0;
-    function createButton(text, result) {
+    function createButton(buttonText, result) {
       const button = blessed.button({
         parent: lowerForm,
         left: offX,
@@ -119,7 +120,7 @@ function askQuestion(args) {
           left: 1,
           right: 1,
         },
-        content: text,
+        content: buttonText,
         border: {
           type: 'line',
         },
@@ -152,7 +153,7 @@ function askQuestion(args) {
     });
 
 
-		/* ====== HOOKS ====== */
+    /* ====== HOOKS ====== */
 
     screen.key(['escape', 'q', 'C-c'], (ch, key) => process.exit(0));
     screen.key(['tab'], (ch, key) => {

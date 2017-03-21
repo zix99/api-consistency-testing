@@ -16,9 +16,8 @@ function buildPayload(payloadTemplate, context) {
   });
 }
 
-
+/* eslint no-param-reassign: "off" */
 function executeStepAsync(step, context, validator) {
-  const payload = buildPayload(_.get(step, 'payload', {}), context);
   const fullUri = format(step.uri, context);
 
   const requestObject = {
@@ -31,25 +30,34 @@ function executeStepAsync(step, context, validator) {
 
   log.info(`Making API request to ${step.method} ${fullUri}...`);
   return promise.promisify(middleware)(requestObject)
-		.then(req => request(req))
-		.catch((err) => {
-  log.warn(`Error making request: ${JSON.stringify(err)}`);
-})
-		.then((ret) => {
-  log.info(`Received ${ret.statusCode}`);
-  if (step.expect) assert.equal(ret.statusCode, step.expect, `Unexpected status code after call to ${fullUri}`);
-  if (step.validator) step.validator(ret);
-  if (step.export) {
-    context[step.export] = ret.body;
-  }
-  return validator(_.pick(ret, ['statusCode', 'body']));
-});
+    .then(req => request(req))
+    .catch((err) => {
+      log.warn(`Error making request: ${JSON.stringify(err)}`);
+    })
+    .then((ret) => {
+      log.info(`Received ${ret.statusCode}`);
+      if (step.expect) assert.equal(ret.statusCode, step.expect, `Unexpected status code after call to ${fullUri}`);
+      if (step.validator) step.validator(ret);
+      if (step.export) {
+        context[step.export] = ret.body;
+      }
+      return validator(_.pick(ret, ['statusCode', 'body']));
+    });
 }
 
+/* eslint no-confusing-arrow: "off" */
 function executeAllStepsAync(steps, testValues, config, validator) {
   log.info(`Executing steps with: ${JSON.stringify(testValues)}`);
   const context = _.clone(_.merge(config, testValues));
-  return promise.map(steps, step => executeStepAsync(step, context, response => validator ? validator({ step, test: testValues }, response) : {}), { concurrency: 1 });
+  return promise.map(
+    steps,
+    step => executeStepAsync(
+      step,
+      context,
+      response => validator ? validator({ step, test: testValues }, response) : {}
+      ),
+    { concurrency: 1 }
+  );
 }
 
 module.exports = {

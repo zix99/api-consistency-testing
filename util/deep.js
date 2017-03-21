@@ -1,5 +1,7 @@
 const _ = require('lodash');
 
+/* eslint no-param-reassign: "off" */
+
 function __collapse(obj, path, accum) {
   if (_.isPlainObject(obj)) {
     _.forEach(obj, (val, key) => {

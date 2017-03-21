@@ -15,12 +15,12 @@ function getAllCombinations(obj) {
   }
 
   if (!_.isArray(possibilities)) {
-		// A single value is an array with one value
+    // A single value is an array with one value
     possibilities = [possibilities];
   }
 
   if (_.keys(more).length === 0) {
-		// At the end of the line
+    // At the end of the line
     return _.map(possibilities, item => _.set({}, key, item));
   }
 
