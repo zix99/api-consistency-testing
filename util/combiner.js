@@ -7,6 +7,11 @@ Returns: An array of map objects continuing only 1 value each
 **/
 function getAllCombinations(obj) {
   const key = _.keys(obj)[0];
+
+  if (key === undefined) {
+    return [];
+  }
+
   const more = _.omit(obj, key);
   let possibilities = obj[key];
 

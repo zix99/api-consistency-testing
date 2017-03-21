@@ -1,7 +1,5 @@
 const assert = require('chai').assert;
 const _ = require('lodash');
-const diff = require('deep-diff').diff;
-
 const deep = require('../../util/deep');
 
 describe('Deep utilities', () => {
@@ -40,27 +38,21 @@ describe('Deep utilities', () => {
   };
 
   describe('Collapse', () => {
-    it('Collapses an array to its items', (done) => {
+    it('Collapses an array to its items', () => {
       const ret = deep.collapse(example);
-
-      assert.isUndefined(diff(ret, collapsed));
-
-      done();
+      assert.deepEqual(ret, collapsed);
     });
   });
 
   describe('Expand', () => {
-    it('Expands an array to its original form', (done) => {
+    it('Expands an array to its original form', () => {
       const ret = deep.expand(collapsed);
-
-      assert.isUndefined(diff(ret, example));
-
-      done();
+      assert.deepEqual(ret, example);
     });
   });
 
   describe('Map', () => {
-    it('Modifies an object according to a function', (done) => {
+    it('Modifies an object according to a function', () => {
       const obj = _.clone(example);
 
       deep.map(obj, (val) => {
@@ -70,9 +62,7 @@ describe('Deep utilities', () => {
         return val;
       });
 
-      assert.isUndefined(diff(obj, mapped));
-
-      done();
+      assert.deepEqual(obj, mapped);
     });
   });
 });
