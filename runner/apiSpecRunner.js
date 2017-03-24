@@ -46,15 +46,14 @@ function executeStepAsync(step, context, validator) {
 }
 
 /* eslint no-confusing-arrow: "off" */
-function executeAllStepsAync(steps, testValues, config, validator) {
-  log.info(`Executing steps with: ${JSON.stringify(testValues)}`);
-  const context = _.clone(_.merge(config, testValues));
+function executeAllStepsAync(label, steps, context, validator) {
+  log.info(`Executing steps with: ${JSON.stringify(label)}`);
   return promise.map(
     steps,
     step => executeStepAsync(
       step,
       context,
-      response => validator ? validator({ step, test: testValues }, response) : {}
+      response => validator ? validator({ step, label }, response) : {}
       ),
     { concurrency: 1 }
   );

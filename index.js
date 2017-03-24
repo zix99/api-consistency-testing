@@ -16,6 +16,7 @@ function buildTestVariations(testSet) {
   return _.reduce(testSet, (accum, test) => _.union(accum, getAllCombinations(test)), []);
 }
 
+/* Haven't made this work in a while
 function buildMochaTests(apiSpec) {
   const description = apiSpec.description ||
   _.join(_.map(apiSpec.steps, step => `${step.method} ${step.uri}`), ' -> ');
@@ -25,19 +26,20 @@ function buildMochaTests(apiSpec) {
     _.forEach(buildTestVariations(apiSpec.tests), (test) => {
       it(`Test with values: ${JSON.stringify(test)}`, done => {
         this.timeout(apiSpec.timeout || DEFAULT_TIMEOUT);
-        runner.executeAllStepsAync(apiSpec.steps, test, apiSpec.config, validator)
+        runner.executeAllStepsAync(test, apiSpec.steps, apiSpec.config, validator)
           .nodeify(done);
       });
     });
   });
 }
+*/
 
 function runTestsInteractively(apiSpec) {
   log.info(`Running test: ${apiSpec.spec.description || 'Undefined description'}`);
   const variations = buildTestVariations(apiSpec.spec.tests);
   console.dir(variations);
   return promise.map(variations, test =>
-    runner.executeAllStepsAync(apiSpec.spec.steps, test, apiSpec.config, validator)
+    runner.executeAllStepsAync(test, apiSpec.spec.steps, _.merge({}, apiSpec.config, test), validator)
       .catch((err) => {
         log.warn(`Error processing ${apiSpec.spec.description}: ${err}`);
       }), { concurrency: 1 });

@@ -18,7 +18,7 @@ function askQuestion(args) {
     screen.title = 'ACT: Response Comparison';
 
     /* ====== Context Top ===== */
-    const testText = _.join(_.map(args.scenario.test, (val, key) => `${key}=${val}`), ', ');
+    const testText = _.join(_.map(args.scenario.label, (val, key) => `${key}=${val}`), ', ');
     const requestDetails = blessed.box({
       parent: screen,
       top: 0,
