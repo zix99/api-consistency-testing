@@ -17,7 +17,7 @@ function describeConsistently(apiSpec) {
 }
 
 function evaluateApis() {
-  return Promise.map(__tests, runner.runTestsInteractively, { concurrency: 1 });
+  return Promise.map(__tests, test => runner.runTestsInteractively(test, wrapper.globalConfig), { concurrency: 1 });
 }
 const wrapper = (opts, func) => {
   __currentConfig = opts;
@@ -26,6 +26,7 @@ const wrapper = (opts, func) => {
 };
 wrapper.describeConsistently = describeConsistently;
 wrapper.evaluateApis = evaluateApis;
+wrapper.globalConfig = {};
 
 module.exports = wrapper;
 global.describeConsistently = describeConsistently;

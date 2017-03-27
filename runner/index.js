@@ -28,12 +28,12 @@ function buildMochaTests(apiSpec) {
 }
 */
 
-function runTestsInteractively(apiSpec) {
+function runTestsInteractively(apiSpec, globalConfig) {
   log.info(`Running test: ${apiSpec.spec.description || 'Undefined description'}`);
   const variations = buildTestVariations(apiSpec.spec.tests);
   console.dir(variations);
   return Promise.map(variations, test =>
-    runner.executeAllStepsAync(test, apiSpec.spec.steps, _.merge({}, apiSpec.config, test), validator)
+    runner.executeAllStepsAync(test, apiSpec.spec.steps, _.merge({}, globalConfig, apiSpec.config, test), validator)
       .catch((err) => {
         log.warn(`Error processing ${apiSpec.spec.description}: ${err}`);
       }), { concurrency: 1 });
