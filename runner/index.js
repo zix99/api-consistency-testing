@@ -33,10 +33,11 @@ function runTestsInteractively(apiSpec, globalConfig) {
   const variations = buildTestVariations(apiSpec.spec.tests);
   console.dir(variations);
   return Promise.map(variations, test =>
-    runner.executeAllStepsAync(test, apiSpec.spec.steps, _.merge({}, globalConfig, apiSpec.config, test), validator)
-      .catch((err) => {
-        log.warn(`Error processing ${apiSpec.spec.description}: ${err}`);
-      }), { concurrency: 1 });
+    runner.executeAllStepsAync(test, apiSpec.spec.steps, _.merge({}, globalConfig, apiSpec.config, test), (scenario, response) => {
+      return validator(scenario, response);
+    }).catch((err) => {
+      log.warn(`Error processing ${apiSpec.spec.description}: ${err}`);
+    }), { concurrency: 1 });
 }
 
 module.exports = {

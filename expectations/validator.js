@@ -48,6 +48,14 @@ function compareToSchema(schema, response, onDifference) {
   }, { concurrency: 1 }).then(() => deep.expand(collapsedSchema));
 }
 
+function onDifferenceHandler(args) {
+  // Try to intelligently detect what it /could/ be
+
+  
+
+  return questionui(args);
+}
+
 function validateResponse(scenario, response) {
   const scenarioHash = hash(scenario);
   log.debug(`Scenario hash: ${scenarioHash}`);
@@ -58,7 +66,7 @@ function validateResponse(scenario, response) {
 
   return compareToSchema(schema, response, (args) => {
     args.scenario = scenario;
-    return questionui(args);
+    return onDifferenceHandler(args);
   }).then((ret) => {
     if (ret) { registry.appendSnapshot(scenarioHash, ret); }
   });
