@@ -48,6 +48,11 @@ function compareToSchema(schema, response, onDifference) {
   }, { concurrency: 1 }).then(() => deep.expand(collapsedSchema));
 }
 
+/*
+args: {
+  key, expect, actual, fullExpect, fullActual, scenario
+}
+*/
 function onDifferenceHandler(args) {
   // Try to intelligently detect what it /could/ be
 
